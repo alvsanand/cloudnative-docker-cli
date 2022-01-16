@@ -49,13 +49,17 @@ jobs:
 
     steps:
       - name: Get version of software
-        id: versions
+        id: get_versions
         run: |
+          docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}:latest
+
           CHANGELOG=$(docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}:latest cloudnative-docker-cli-changelog.sh)
 
           echo "CHANGELOG<<EOF" >> $GITHUB_ENV
           echo "$CHANGELOG" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
+
+          echo "VERSION=$(echo ${{ github.ref }} | sed -rn 's|^refs/tags/(.+)|\1|p' 2> /dev/null)" >> $GITHUB_ENV
       - name: Create Release
         id: create_release
         uses: softprops/action-gh-release@v1
