@@ -82,8 +82,8 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 
 # Final setup
-COPY bin/cloudnative-docker-cli-changelog.sh /usr/local/bin/cloudnative-docker-cli-changelog.sh
-RUN chmod +x /usr/local/bin/cloudnative-docker-cli-changelog.sh
+COPY bin/*.sh /usr/local/bin
+RUN chmod +x /usr/local/bin/*
 
 RUN apt-get clean \
   && rm -rf /var/lib/apt/lists/* /tmp/*
@@ -93,5 +93,6 @@ ENV PATH $PATH:/usr/local/lib/google-cloud-sdk/bin
 WORKDIR /home/$USERNAME
 USER $USERNAME
 
-# Set default command
+# Set entrypoint
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["bash"]

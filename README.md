@@ -43,12 +43,12 @@ docker run --restart=always -d ^
 
 # Unix
 docker run --restart=always -d \
-  -v "$HOME:/data/home"  -u $(stat -c "%u:%g" $HOME) \
+  -v "$HOME:/data/home" -u $(stat -c "%u:%g" $HOME) \
   --name cloudnative-docker-cli \
   ghcr.io/alvsanand/cloudnative-docker-cli:latest \
   bash -c "while true; do sleep 10000; done"
 ```
-- Execute as shell inside the container:
+- Execute a shell inside the container:
 
 ```bash
 # Windows (CMD)
@@ -66,10 +66,10 @@ docker exec -it $(docker ps -aq --filter name=cloudnative-docker-cli) bash
 # Windows (CMD)
 FOR /F "tokens=*" %g IN ('docker ps -aq --filter "name=cloudnative-docker-cli"') do (SET DOCKER_ID=%g)
 
-docker rm -f %DOCKER_ID% bash
+docker rm -f %DOCKER_ID%
 
 # Unix
-docker rm -f bash
+docker rm -f $(docker ps -aq --filter name=cloudnative-docker-cli)
 ```
 
 > A Docker container may be due to its stateless nature, so be sure to backup data frequently.
