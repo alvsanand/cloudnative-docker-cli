@@ -1,33 +1,41 @@
 name: Create and publish a Docker image
+
 on:
   push:
     branches-ignore:
       - "!main"
     tags:
       - "v*"
-env:
-  REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
+
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_NAME: ${{ github.repository }}
+
     permissions:
       contents: read
       packages: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+
       - name: Log in to the Container registry
         uses: docker/login-action@v1
         with:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@v3
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
@@ -35,33 +43,31 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
   create-release:
     needs: build-and-push-image
+
     runs-on: ubuntu-latest
+
     container: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+
     steps:
       - name: Get version of software
         id: versions
         run: |
-          echo ::set-output name=AWS_CLI::"$(aws --version | sed -rn 's|^aws-cli/([0-9.]+) .+|\1|p')"
-          echo ::set-output name=AZURE_CLI::"$(az --version 2> /dev/null | grep 'azure-cli' | sed -rn 's|^azure-cli +([0-9.]+)|\1|p')"
-          echo ::set-output name=GOOGLE_CLOUD_SDK::"$(aws --version | sed -rn 's|^aws-cli/([0-9.]+) .+|\1|p')"
-          echo ::set-output name=KUBECTL::"$(kubectl version --client --short | sed -rn 's|^Client Version: v([0-9.]+)|\1|p')"
-          echo ::set-output name=TERRAFORM::"$(tfenv list | sed '1d' | sed -e 's/^[[:space:]]*//' | tr '\n' ' ' | xargs echo -n)"
+          CHANGELOG=$(/usr/local/bin/cloudnative-docker-cli-version.sh)
+
+          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
+          echo "$CHANGELOG" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
           release_name: Release ${{ github.ref }}
-          body: |
-            This versions contains the following version of software:
-            - AWS CLI: ${{ steps.versions.outputs.AWS_CLI }}.
-            - Azure CLI: ${{ steps.versions.outputs.AZURE_CLI }}.
-            - Google Cloud SDK: ${{ steps.versions.outputs.GOOGLE_CLOUD_SDK }}.
-            - Kubectl: ${{ steps.versions.outputs.KUBECTL }}.
-            - Terraform: ${{ steps.versions.outputs.TERRAFORM }}.
+          body: ${{ env.CHANGELOG }}
           draft: false
           prerelease: false

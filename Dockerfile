@@ -77,8 +77,8 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 
 # Final setup
-COPY bin/cloudnative-docker-cli-version.sh /usr/local/bin/cloudnative-docker-cli-version.sh
-RUN chmod +x /usr/local/bin/cloudnative-docker-cli-version.sh
+COPY bin/cloudnative-docker-cli-changelog.sh /usr/local/bin/cloudnative-docker-cli-changelog.sh
+RUN chmod +x /usr/local/bin/cloudnative-docker-cli-changelog.sh
 
 RUN apt-get remove -y software-properties-common \
   && apt-get autoremove -y \
