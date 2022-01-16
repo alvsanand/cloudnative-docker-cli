@@ -1,10 +1,10 @@
 # Build arguments
 ARG UBUNTU_VERSION=20.04
 
-LABEL org.opencontainers.image.authors="alvsanand@gmail.com"
-LABEL org.opencontainers.image.source=https://github.com/alvsanand/cloudnative-docker-cli
-
 FROM ubuntu:$UBUNTU_VERSION
+
+LABEL org.opencontainers.image.authors="alvsanand@gmail.com"
+LABEL org.opencontainers.image.source="https://github.com/alvsanand/cloudnative-docker-cli"
 
 # Install basic components
 RUN apt-get update \
