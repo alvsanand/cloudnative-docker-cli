@@ -1,9 +1,7 @@
-name: Create and publish a Docker image
+name: Release
 
 on:
   push:
-    branches-ignore:
-      - "!main"
     tags:
       - "v*"
 

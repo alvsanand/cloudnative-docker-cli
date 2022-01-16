@@ -5,9 +5,7 @@ FROM ubuntu:$UBUNTU_VERSION
 
 # Install basic components
 RUN apt-get update \
-  && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-     software-properties-common \
-  && apt-get install -y \
+ && apt-get install -y \
     apt-transport-https \
     ca-certificates \
     curl \
@@ -22,7 +20,10 @@ RUN apt-get update \
     zip
 
 # Install Ansible
-RUN add-apt-repository --yes --update ppa:ansible/ansible \
+RUN DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common \
+ && add-apt-repository --yes --update ppa:ansible/ansible \
+ && apt-get remove -y software-properties-common \
+ && apt-get autoremove -y \
  && apt update \
  && apt install -y ansible
 
@@ -30,16 +31,18 @@ RUN add-apt-repository --yes --update ppa:ansible/ansible \
 RUN pip3 install --no-cache-dir awscli
 
 # Install Azure CLI
-RUN curl -sL https://aka.ms/InstallAzureCLIDeb | bash
+RUN pip3 install --no-cache-dir azure-cli
 
 # Install Github CLI
 RUN curl -sL https://webinstall.dev/gh | bash \
   && mv $(readlink -f /root/.local/bin/gh) /usr/local/bin/gh \
   && rm -Rf /root/.local \
-  && rm -Rf /root/.cache
+  && rm -Rf /root/.cache \
+  && rm -rf /root/Downloads
 
 # Install Google Cloud SDK
-RUN cd /usr/lib && curl -sSL https://sdk.cloud.google.com | bash -s -- --install-dir=/usr/local/lib/google-cloud-sdk --disable-prompts
+RUN cd /usr/lib && curl -sSL https://sdk.cloud.google.com | bash -s -- --install-dir=/usr/local/lib/ --disable-prompts \
+  && rm -rf /usr/local/lib/google-cloud-sdk/.install
 
 # Install Kubectl
 RUN curl -o /usr/local/bin/kubectl -sL https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl \
@@ -50,7 +53,7 @@ ARG SINCE_TERRAFORM_VERSION=0.12
 
 RUN git clone https://github.com/kamatama41/tfenv.git /usr/local/lib/tfenv \
  && ln -s /usr/local/lib/tfenv/bin/* /usr/local/bin \
- && for tf_ver in $(tfenv list-remote | sed -rn 's|^([0-9]).([0-9]+).+|\1.\2|p' | sort --version-sort | uniq | sed '/'$SINCE_TERRAFORM_VERSION'/,$!d'); do tfenv install latest:^$tf_ver; done \
+ && tfenv install latest \
  && tfenv use latest
 
 # Install Vault
@@ -62,7 +65,9 @@ RUN curl -Ss https://releases.hashicorp.com/vault/ | sed -rn 's|.+vault_([0-9.]+
 # Install other cool commands
 RUN curl -sL https://webinstall.dev/k9s | bash \
   && mv $(readlink -f /root/.local/bin/k9s) /usr/local/bin/k9s \
-  && rm -Rf /root/.local
+  && rm -Rf /root/.local \
+  && rm -Rf /root/.cache \
+  && rm -rf /root/Downloads
 
 # Create user
 ARG USERNAME=cloudnative-docker-cli
@@ -80,11 +85,8 @@ RUN groupadd --gid $USER_GID $USERNAME \
 COPY bin/cloudnative-docker-cli-changelog.sh /usr/local/bin/cloudnative-docker-cli-changelog.sh
 RUN chmod +x /usr/local/bin/cloudnative-docker-cli-changelog.sh
 
-RUN apt-get remove -y software-properties-common \
-  && apt-get autoremove -y \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/* \
-  && rm -rf /root/.local
+RUN apt-get clean \
+  && rm -rf /var/lib/apt/lists/* /tmp/*
 
 ENV PATH $PATH:/usr/local/lib/google-cloud-sdk/bin
 
