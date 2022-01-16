@@ -7,7 +7,7 @@ The goal is to create a full feature but lightweight Docker image with several c
 
 ## Tools
 
-What's is included included:
+What tools are included and ready to use:
 
 * Common software: curl, git, jq, vi, zip...
 * [Ansible](https://www.ansible.com/)
@@ -25,34 +25,76 @@ What's is included included:
 You just have to execute a Docker ```run```:
 
 ```bash
-docker container run -it --rm ghcr.io/alvsanand/cloudnative-docker-cli:latest
+docker run -it --rm ghcr.io/alvsanand/cloudnative-docker-cli:latest
 ```
 > The `--rm` flag will completely destroy the container and its data on exit.
 
-If you want to execute as a daemon
+If you want to execute it as a daemon and USER_HOME mounted in ```/data/home```:
 
+- Create the container as daemon:
+
+```bash
+# Windows (CMD)
+docker run --restart=always -d ^
+  -v "%USERPROFILE%:/data/home" ^
+  --name cloudnative-docker-cli ^
+  ghcr.io/alvsanand/cloudnative-docker-cli:latest ^
+  bash -c "while true; do sleep 10000; done"
+
+# Unix
+docker run --restart=always -d \
+  -v "$HOME:/data/home"  -u $(stat -c "%u:%g" $HOME) \
+  --name cloudnative-docker-cli \
+  ghcr.io/alvsanand/cloudnative-docker-cli:latest \
+  bash -c "while true; do sleep 10000; done"
+```
+- Execute as shell inside the container:
+
+```bash
+# Windows (CMD)
+FOR /F "tokens=*" %g IN ('docker ps -aq --filter "name=cloudnative-docker-cli"') do (SET DOCKER_ID=%g)
+
+docker exec -it %DOCKER_ID% bash
+
+# Unix
+docker exec -it $(docker ps -aq --filter name=cloudnative-docker-cli) bash
+```
+
+- If needed, delete the pod:
+
+```bash
+# Windows (CMD)
+FOR /F "tokens=*" %g IN ('docker ps -aq --filter "name=cloudnative-docker-cli"') do (SET DOCKER_ID=%g)
+
+docker rm -f %DOCKER_ID% bash
+
+# Unix
+docker rm -f bash
+```
+
+> A Docker container may be due to its stateless nature, so be sure to backup data frequently.
 
 Additionally, you can add more parameters to Docker in order to add configuration to the commands. All will dependes of the tool. For example:
 
 - Set proxy:
 
     ```bash
-    docker container run -it --rm -e "HTTP_PROXY=SOME_PROXY_URL" -e "HTTPS_PROXY=SOME_PROXY_URL" -e "NO_PROXY=127.0.0.1,localhost,docker.host.internal" -v ${PWD}:/workspace ghcr.io/alvsanand/cloudnative-docker-cli:latest
+    docker run -it --rm -e "HTTP_PROXY=SOME_PROXY_URL" -e "HTTPS_PROXY=SOME_PROXY_URL" -e "NO_PROXY=127.0.0.1,localhost,docker.host.internal" -v ${PWD}:/workspace ghcr.io/alvsanand/cloudnative-docker-cli:latest
 
 - Set AWS credentials using environment variables:
 
     ```bash
-    docker container run -it --rm -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}" -v ${PWD}:/workspace ghcr.io/alvsanand/cloudnative-docker-cli:latest
+    docker run -it --rm -e "AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}" -e "AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}" -e "AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}" -v ${PWD}:/workspace ghcr.io/alvsanand/cloudnative-docker-cli:latest
     ```
 
 - Set AWS credentials using aws config:
 
     ```bash
     # Windows (CMD)
-    docker container run -it --rm  -v "%USERPROFILE%\\.aws:/home/cloudnative-docker-cli/.aws" workspace ghcr.io/alvsanand/cloudnative-docker-cli:latest
+    docker run -it --rm  -v "%USERPROFILE%\\.aws:/home/cloudnative-docker-cli/.aws" workspace ghcr.io/alvsanand/cloudnative-docker-cli:latest
     
-    # Linux
-    docker container run -it --rm  -v "$HOME/.aws:/home/cloudnative-docker-cli/.aws" workspace ghcr.io/alvsanand/cloudnative-docker-cli:latest
+    # Unix
+    docker run -it --rm  -v "$HOME/.aws:/home/cloudnative-docker-cli/.aws" workspace ghcr.io/alvsanand/cloudnative-docker-cli:latest
     ```
 
 ### Terraform
@@ -61,5 +103,6 @@ In order to change the version, execute the following command:
 
 ```bash
 TF_VERSION=SOME_VERSION # Example: TF_VERSION=0.12
+
 sudo tfenv install latest:$TF_VERSION && tfenv use latest:$TF_VERSION
 ```
