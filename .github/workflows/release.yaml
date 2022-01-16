@@ -5,13 +5,13 @@ on:
     tags:
       - "v*"
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
 jobs:
   build-and-push-image:
     runs-on: ubuntu-latest
-
-    env:
-      REGISTRY: ghcr.io
-      IMAGE_NAME: ${{ github.repository }}
 
     permissions:
       contents: read
@@ -24,7 +24,7 @@ jobs:
       - name: Log in to the Container registry
         uses: docker/login-action@v1
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
@@ -32,7 +32,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: ghcr.io/alvsanand/cloudnative-docker-cli
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
@@ -46,17 +46,12 @@ jobs:
     needs: build-and-push-image
 
     runs-on: ubuntu-latest
-    container: ghcr.io/alvsanand/cloudnative-docker-cli:latest
-
-    env:
-      REGISTRY: ghcr.io
-      IMAGE_NAME: ${{ github.repository }}
 
     steps:
       - name: Get version of software
         id: versions
         run: |
-          CHANGELOG=$(/usr/local/bin/cloudnative-docker-cli-changelog.sh)
+          CHANGELOG=$(docker run --rm ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}:latest cloudnative-docker-cli-changelog.sh)
 
           echo "CHANGELOG<<EOF" >> $GITHUB_ENV
           echo "$CHANGELOG" >> $GITHUB_ENV
