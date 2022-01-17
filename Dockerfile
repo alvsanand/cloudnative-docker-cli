@@ -10,6 +10,7 @@ LABEL org.opencontainers.image.source="https://github.com/alvsanand/cloudnative-
 RUN apt-get update \
  && apt-get install -y \
     apt-transport-https \
+    bash-completion \
     ca-certificates \
     curl \
     git \

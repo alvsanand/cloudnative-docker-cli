@@ -97,6 +97,12 @@ Additionally, you can add more parameters to Docker in order to add configuratio
     docker run -it --rm  -v "$HOME/.aws:/home/cloudnative-docker-cli/.aws" workspace ghcr.io/alvsanand/cloudnative-docker-cli:latest
     ```
 
+Finally, there is a [Powershell script](https://github.com/alvsanand/cloudnative-docker-cli/blob/main/scripts/cloudnative-docker-cli-installer.ps1) that could be used a templated to:
+
+- Run cloudnative-docker-cli as a daemon.
+- Create a Windows Terminal Profile.
+- Using ```--restore``` parameter can restore to a default version of cloudnative-docker-cli.
+
 ### Terraform
 
 In order to change the version, execute the following command:
