@@ -8,31 +8,35 @@ LABEL org.opencontainers.image.source="https://github.com/alvsanand/cloudnative-
 
 # Install basic components
 RUN apt-get update \
- && apt-get install -y \
-    apt-transport-https \
-    bash-completion \
-    ca-certificates \
-    curl \
-    git \
-    gnupg2 \
-    jq \
-    python3 python3-pip \
-    telnet \
-    unzip \
-    vim \
-    wget \
-    zip
+  && apt-get install -y \
+  apt-transport-https \
+  bash-completion \
+  ca-certificates \
+  curl \
+  git \
+  gnupg2 \
+  jq \
+  python3 python3-pip \
+  telnet \
+  unzip \
+  vim \
+  wget \
+  zip
 
 # Install Ansible
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common \
- && add-apt-repository --yes --update ppa:ansible/ansible \
- && apt-get remove -y software-properties-common \
- && apt-get autoremove -y \
- && apt update \
- && apt install -y ansible
+  && add-apt-repository --yes --update ppa:ansible/ansible \
+  && apt-get remove -y software-properties-common \
+  && apt-get autoremove -y \
+  && apt update \
+  && apt install -y ansible
 
 # Install AWS CLI
-RUN pip3 install --no-cache-dir awscli
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip" \
+  && cd /tmp \
+  && unzip awscliv2.zip \
+  && ./aws/install -i /usr/local/aws-cli -b /usr/local/bin \
+  && rm -Rf /tmp/aws
 
 # Install Azure CLI
 RUN pip3 install --no-cache-dir azure-cli
@@ -50,21 +54,21 @@ RUN cd /usr/lib && curl -sSL https://sdk.cloud.google.com | bash -s -- --install
 
 # Install Kubectl
 RUN curl -o /usr/local/bin/kubectl -sL https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl \
- && chmod +x /usr/local/bin/kubectl
+  && chmod +x /usr/local/bin/kubectl
 
 # Install Terraform
 ARG SINCE_TERRAFORM_VERSION=0.12
 
 RUN git clone https://github.com/kamatama41/tfenv.git /usr/local/lib/tfenv \
- && ln -s /usr/local/lib/tfenv/bin/* /usr/local/bin \
- && tfenv install latest \
- && tfenv use latest
+  && ln -s /usr/local/lib/tfenv/bin/* /usr/local/bin \
+  && tfenv install latest \
+  && tfenv use latest
 
 # Install Vault
 RUN curl -Ss https://releases.hashicorp.com/vault/ | sed -rn 's|.+vault_([0-9.]+).+|\1|p' | sort --version-sort | uniq | tail -1 | xargs -I {} curl -Ss "https://releases.hashicorp.com/vault/{}/vault_{}_linux_amd64.zip" -o /tmp/vault_linux_amd64.zip \
- && unzip /tmp/vault_linux_amd64.zip -d /tmp \
- && mv /tmp/vault /usr/local/bin \
- && rm /tmp/vault_linux_amd64.zip
+  && unzip /tmp/vault_linux_amd64.zip -d /tmp \
+  && mv /tmp/vault /usr/local/bin \
+  && rm /tmp/vault_linux_amd64.zip
 
 # Install other cool commands
 RUN curl -sL https://webinstall.dev/k9s | bash \
@@ -79,11 +83,11 @@ ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
 RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --create-home  --uid $USER_UID --gid $USER_GID -m $USERNAME \
-    && chown -R $USER_UID:$USER_GID /home/$USERNAME \
-    && apt-get install -y sudo \
-    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
-    && chmod 0440 /etc/sudoers.d/$USERNAME
+  && useradd --create-home  --uid $USER_UID --gid $USER_GID -m $USERNAME \
+  && chown -R $USER_UID:$USER_GID /home/$USERNAME \
+  && apt-get install -y sudo \
+  && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+  && chmod 0440 /etc/sudoers.d/$USERNAME
 
 # Final setup
 COPY bin/*.sh /usr/local/bin
