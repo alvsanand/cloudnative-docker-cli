@@ -70,11 +70,11 @@ if (!$DOCKER_ID) {
     }
     
     if (Test-Path "$env:USERPROFILE\.config\gh") {
-        $EXTRA_VOLUMES="$EXTRA_VOLUMES -v `"/$($env:USERPROFILE.replace('\','/').replace(':',''))/.config/.gh:/home/cloudnative-docker-cli/.config/.gh`""
+        $EXTRA_VOLUMES="$EXTRA_VOLUMES -v `"/$($env:USERPROFILE.replace('\','/').replace(':',''))/.config/gh:/home/cloudnative-docker-cli/.config/gh`""
     }
     
     if (Test-Path "$env:USERPROFILE\.config\gcloud") {
-        $EXTRA_VOLUMES="$EXTRA_VOLUMES -v `"/$($env:USERPROFILE.replace('\','/').replace(':',''))/.config/.gh:/home/cloudnative-docker-cli/.config/.gh`""
+        $EXTRA_VOLUMES="$EXTRA_VOLUMES -v `"/$($env:USERPROFILE.replace('\','/').replace(':',''))/.config/gcloud:/home/cloudnative-docker-cli/.config/gcloud`""
     }    
     
 $DOCKER_COMMAND=@"
