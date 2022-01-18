@@ -1,11 +1,9 @@
 #!/bin/bash
 
-set -e
-
+# Updates id of the group to mathc host group
 if [[ -z "$(getent group $(id -g))" ]]; then
     sudo groupmod -g $(id -g) cloudnative-docker-cli
 fi
-
 
 # Enable autocomplete commands
 grep 'kubectl completion' "$HOME/.bashrc" > /dev/null 2>&1
